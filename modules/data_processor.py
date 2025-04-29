@@ -106,12 +106,12 @@ def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
         for group_title in list(title_groups.keys()):
             # Check for high similarity between titles
             if title_similarity(title, group_title) > 0.85:
-                title_groups[group_title].append(row)
+                title_groups[group_title].append(row.to_dict())
                 found_match = True
                 break
         
         if not found_match:
-            title_groups[title] = [row]
+            title_groups[title] = [row.to_dict()]
     
     # Select the best record from each title group
     unique_records = []
@@ -124,7 +124,18 @@ def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
             unique_records.append(best_record)
     
     # Create a new DataFrame with unique records
-    unique_data = pd.DataFrame(unique_records)
+    # Convert lists to strings for proper DataFrame creation
+    processed_records = []
+    for record in unique_records:
+        processed_record = {}
+        for key, value in record.items():
+            if isinstance(value, list):
+                processed_record[key] = '; '.join(map(str, value))
+            else:
+                processed_record[key] = value
+        processed_records.append(processed_record)
+    
+    unique_data = pd.DataFrame(processed_records)
     
     # Drop cleaning columns
     if 'clean_title' in unique_data.columns:
@@ -170,7 +181,7 @@ def select_best_record(group: pd.DataFrame) -> Dict[str, Any]:
     Returns:
         Dictionary representing the best record
     """
-    if group.shape[0] == 1:
+    if len(group) == 1:
         return group.iloc[0].to_dict()
     
     # Prioritize records with more complete information
@@ -235,6 +246,9 @@ def process_data(df: pd.DataFrame) -> pd.DataFrame:
         if isinstance(authors, list):
             return [clean_author_name(author) for author in authors if author]
         elif isinstance(authors, str):
+            # Split by semicolon if present
+            if ';' in authors:
+                return [clean_author_name(a.strip()) for a in authors.split(';')]
             return [clean_author_name(authors)]
         else:
             return []
@@ -259,6 +273,9 @@ def process_data(df: pd.DataFrame) -> pd.DataFrame:
         if isinstance(institutions, list):
             return [inst.strip() for inst in institutions if inst]
         elif isinstance(institutions, str):
+            # Split by semicolon if present
+            if ';' in institutions:
+                return [inst.strip() for inst in institutions.split(';')]
             return [institutions.strip()]
         else:
             return []
@@ -270,6 +287,9 @@ def process_data(df: pd.DataFrame) -> pd.DataFrame:
         if isinstance(countries, list):
             return [country.strip() for country in countries if country]
         elif isinstance(countries, str):
+            # Split by semicolon if present
+            if ';' in countries:
+                return [country.strip() for country in countries.split(';')]
             return [countries.strip()]
         else:
             return []

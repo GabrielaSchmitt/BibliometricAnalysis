@@ -11,7 +11,7 @@
 2. Rode o app
 
    ```
-    streamlit run streamlit_appDS.py
+    streamlit run streamlit_app.py
    ```
 
 <br>

@@ -512,10 +512,9 @@ def plot_author_network(data: pd.DataFrame, min_collaborations: int = 2, max_nod
             size=scaled_sizes,
             line=dict(width=1, color='white'),
             colorbar=dict(
-                title='Number of Collaborations',
+                title=dict(text='Number of Collaborations', side='right'),  # ✅ Correct
                 thickness=15,
-                xanchor='left',
-                titleside='right'
+                xanchor='left'
             )
         ),
         text=node_text,

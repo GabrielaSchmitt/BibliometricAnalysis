@@ -164,7 +164,7 @@ if st.session_state.processed and st.session_state.data is not None:
     with col2:
         st.metric(
             label="Unique Authors", 
-            value=data['author'].nunique()
+            value=pd.Series([a for sublist in data['author_list'] if isinstance(sublist, list) for a in sublist]).nunique()
         )
     
     with col3:
