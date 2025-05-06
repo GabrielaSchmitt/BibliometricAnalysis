@@ -7,7 +7,7 @@ from plotly.subplots import make_subplots
 import networkx as nx
 from collections import Counter
 from wordcloud import WordCloud
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Union
 import re
 from itertools import combinations
 
@@ -63,6 +63,83 @@ def plot_articles_by_database(data: pd.DataFrame):
     
     return fig
 
+# def plot_most_cited_articles(data: pd.DataFrame, top_n: int = 10):
+#     """
+#     Create a horizontal bar chart showing the most cited articles.
+    
+#     Args:
+#         data: Processed bibliometric DataFrame
+#         top_n: Number of top articles to show
+        
+#     Returns:
+#         Plotly figure
+#     """
+#     if data.empty or 'citation_count' not in data.columns:
+#         # Generate sample data if no real data
+#         sample_data = pd.DataFrame({
+#             'title': [f'Sample Article {i+1}' for i in range(10)],
+#             'citation_count': [100, 85, 72, 65, 58, 52, 48, 45, 40, 35],
+#             'author_list': [['Author A', 'Author B'] for _ in range(10)]
+#         })
+#         plot_data = sample_data.sort_values('citation_count', ascending=False).head(top_n)
+#     else:
+#         # Use real data
+#         plot_data = data.sort_values('citation_count', ascending=False).head(top_n)
+    
+#     # Prepare titles and authors for display
+#     def format_title(row):
+#         """Format title and authors for display."""
+#         title = row['title']
+#         if isinstance(title, str) and len(title) > 60:
+#             title = title[:57] + '...'
+        
+#         authors = row.get('author_list', [])
+#         if authors and isinstance(authors, list):
+#             if len(authors) > 1:
+#                 authors_str = f"{authors[0]} et al."
+#             else:
+#                 authors_str = authors[0]
+#         else:
+#             authors_str = "Unknown"
+        
+#         return f"{title}<br><i>{authors_str}</i>"
+    
+#     # Apply the formatting function
+#     if 'author_list' in plot_data.columns:
+#         plot_data['formatted_title'] = plot_data.apply(format_title, axis=1)
+#     else:
+#         plot_data['formatted_title'] = plot_data['title'].apply(lambda x: x[:57] + '...' if len(x) > 60 else x)
+    
+#     # Sort by citation count in ascending order for the horizontal bar chart
+#     plot_data = plot_data.sort_values('citation_count', ascending=True)
+    
+#     # Create horizontal bar chart
+#     fig = px.bar(
+#         plot_data,
+#         x='citation_count', 
+#         y='formatted_title',
+#         orientation='h',
+#         labels={'citation_count': 'Citation Count', 'formatted_title': ''},
+#         title=f'Top {top_n} Most Cited Articles',
+#         color='citation_count',
+#         color_continuous_scale='Viridis',
+#         text='citation_count'
+#     )
+    
+#     fig.update_traces(textposition='outside')
+    
+#     fig.update_layout(
+#         height=500,
+#         yaxis={'categoryorder': 'total ascending'},
+#         hovermode='closest',
+#         xaxis_title='Citation Count',
+#         yaxis_title='',
+#         margin=dict(l=20, r=20, t=40, b=20),
+#         coloraxis_showscale=False,
+#     )
+    
+#     return fig
+
 def plot_most_cited_articles(data: pd.DataFrame, top_n: int = 10):
     """
     Create a horizontal bar chart showing the most cited articles.
@@ -79,36 +156,55 @@ def plot_most_cited_articles(data: pd.DataFrame, top_n: int = 10):
         sample_data = pd.DataFrame({
             'title': [f'Sample Article {i+1}' for i in range(10)],
             'citation_count': [100, 85, 72, 65, 58, 52, 48, 45, 40, 35],
-            'author_list': [['Author A', 'Author B'] for _ in range(10)]
+            'author': [['Author A', 'Author B'] for _ in range(10)]
         })
         plot_data = sample_data.sort_values('citation_count', ascending=False).head(top_n)
     else:
-        # Use real data
-        plot_data = data.sort_values('citation_count', ascending=False).head(top_n)
+        # Use real data - make a copy to avoid modifying the original
+        plot_data = data.sort_values('citation_count', ascending=False).head(top_n).copy()
     
     # Prepare titles and authors for display
     def format_title(row):
         """Format title and authors for display."""
+        # Handle title
         title = row['title']
-        if isinstance(title, str) and len(title) > 60:
+        if not isinstance(title, str):
+            title = "Untitled"
+        elif len(title) > 60:
             title = title[:57] + '...'
         
-        authors = row.get('author_list', [])
-        if authors and isinstance(authors, list):
-            if len(authors) > 1:
-                authors_str = f"{authors[0]} et al."
+        # Handle authors - check different possible column names
+        author_info = None
+        if 'author_list' in row and row['author_list']:
+            author_info = row['author_list']
+        elif 'author' in row and row['author']:
+            author_info = row['author']
+        
+        # Format author string
+        if author_info:
+            if isinstance(author_info, list):
+                if len(author_info) > 1:
+                    authors_str = f"{author_info[0]} et al."
+                else:
+                    authors_str = author_info[0]
+            elif isinstance(author_info, str):
+                if ';' in author_info:
+                    authors = [a.strip() for a in author_info.split(';')]
+                    authors_str = f"{authors[0]} et al." if len(authors) > 1 else authors[0]
+                else:
+                    authors_str = author_info
             else:
-                authors_str = authors[0]
+                authors_str = "Unknown"
         else:
             authors_str = "Unknown"
         
         return f"{title}<br><i>{authors_str}</i>"
     
     # Apply the formatting function
-    if 'author_list' in plot_data.columns:
-        plot_data['formatted_title'] = plot_data.apply(format_title, axis=1)
-    else:
-        plot_data['formatted_title'] = plot_data['title'].apply(lambda x: x[:57] + '...' if len(x) > 60 else x)
+    plot_data['formatted_title'] = plot_data.apply(format_title, axis=1)
+    
+    # Ensure citation_count is numeric
+    plot_data['citation_count'] = pd.to_numeric(plot_data['citation_count'], errors='coerce').fillna(0).astype(int)
     
     # Sort by citation count in ascending order for the horizontal bar chart
     plot_data = plot_data.sort_values('citation_count', ascending=True)
@@ -123,20 +219,30 @@ def plot_most_cited_articles(data: pd.DataFrame, top_n: int = 10):
         title=f'Top {top_n} Most Cited Articles',
         color='citation_count',
         color_continuous_scale='Viridis',
-        text='citation_count'
     )
     
-    fig.update_traces(textposition='outside')
+    # Add text labels for citation counts
+    fig.update_traces(
+        texttemplate='%{x}',  # Display the citation count
+        textposition='outside',  # Position text outside the bars
+        hovertemplate='<b>%{y}</b><br>Citations: %{x}<extra></extra>'  # Format hover text
+    )
     
+    # Improve layout
     fig.update_layout(
-        height=500,
-        yaxis={'categoryorder': 'total ascending'},
+        height=max(400, 50 * min(len(plot_data), top_n)),  # Dynamic height based on number of items
+        yaxis={'categoryorder': 'total ascending'},  # Order bars by value
         hovermode='closest',
         xaxis_title='Citation Count',
         yaxis_title='',
-        margin=dict(l=20, r=20, t=40, b=20),
-        coloraxis_showscale=False,
+        margin=dict(l=20, r=80, t=50, b=20),  # Adjust margins for outside labels
+        coloraxis_showscale=False,  # Hide color scale
+        font=dict(size=12),  # Adjust font size
     )
+    
+    # Ensure x-axis range has enough room for labels
+    max_citations = plot_data['citation_count'].max()
+    fig.update_xaxes(range=[0, max_citations * 1.15])  # Add 15% extra space for labels
     
     return fig
 

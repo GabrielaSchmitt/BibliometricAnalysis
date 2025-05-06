@@ -80,6 +80,7 @@ def parse_record(record_text: str) -> Dict[str, Any]:
         'Y1': 'year',
         'DA': 'date',
         'AB': 'abstract',
+        'N1': 'notes',
         'N2': 'abstract',
         'KW': 'keywords',
         'UR': 'url',
@@ -154,6 +155,11 @@ def parse_record(record_text: str) -> Dict[str, Any]:
             record[field_name] = current_content
     
     # Post-processing
+    if 'notes' in record:
+        cited_match = re.search(r'Cited By: (\d+)', record['notes'])
+        if cited_match:
+            record['citation_count'] = int(cited_match.group(1))
+
     
     # Extract year from date if year is not present
     if 'year' not in record and 'date' in record:
