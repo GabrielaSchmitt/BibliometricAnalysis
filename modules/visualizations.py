@@ -563,7 +563,7 @@ def plot_top_institutions(data: pd.DataFrame, top_n: int = 10):
     Returns:
         Plotly figure
     """
-    if data.empty or 'primary_institution' not in data.columns:
+    if data.empty or ('address' not in data.columns and 'institution' not in data.columns):
         # Generate sample data if no real data
         institutions = [
             'Stanford University', 'MIT', 'Harvard University', 'UC Berkeley',
@@ -577,15 +577,39 @@ def plot_top_institutions(data: pd.DataFrame, top_n: int = 10):
             'count': counts
         })
     else:
+        # Determine which column to use for institution data
+        institution_column = 'institution' if 'institution' in data.columns else 'address'
+        
         # Count occurrences of each institution
-        institution_counts = data['primary_institution'].value_counts().reset_index()
-        institution_counts.columns = ['institution', 'count']
+        # First check if institution column has data
+        has_institution_data = data[institution_column].notna().sum() > 0
         
-        # Filter out None/NaN values
-        institution_counts = institution_counts.dropna()
-        
-        # Get top N institutions
-        plot_data = institution_counts.head(top_n)
+        if has_institution_data:
+            # Extract primary institution from address field (takes the first part before comma)
+            if institution_column == 'address':
+                # Extract primary institution from address string (before first comma)
+                data['primary_institution'] = data[institution_column].apply(
+                    lambda x: x.split(',')[0].strip() if isinstance(x, str) else None
+                )
+            else:
+                # Use the institution column directly
+                data['primary_institution'] = data[institution_column]
+            
+            # Count occurrences of each institution
+            institution_counts = data['primary_institution'].value_counts().reset_index()
+            institution_counts.columns = ['institution', 'count']
+            
+            # Filter out None/NaN values
+            institution_counts = institution_counts.dropna()
+            
+            # Get top N institutions
+            plot_data = institution_counts.head(top_n)
+        else:
+            # No institution data found
+            return px.bar(
+                title="No institution data found in the dataset",
+                labels={'value': 'Count', 'index': 'Institution'},
+            )
     
     # Sort data for better visualization
     plot_data = plot_data.sort_values('count', ascending=True)
