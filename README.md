@@ -3,7 +3,7 @@
 ![Project GIF](placeholder_gif.gif) 
 
 ## 🌐 Project Website
-[Insert your project domain here when deployed] 
+[[Bibliometric Analysis](https://biblioanalysis.streamlit.app/)] 
 <br>
 
 ## 🎯 Objective
