@@ -563,6 +563,10 @@ def plot_top_institutions(data: pd.DataFrame, top_n: int = 10):
     Returns:
         Plotly figure
     """
+    if st.session_state.processed and st.session_state.data is not None:
+    st.write("Columns in processed data:", st.session_state.data.columns.tolist())
+    st.write("Sample institution data:", st.session_state.data['institution'].head() if 'institution' in st.session_state.data.columns else "No institution column")
+    
     if data.empty or ('address' not in data.columns and 'institution' not in data.columns):
         # Generate sample data if no real data
         institutions = [
