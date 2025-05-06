@@ -63,15 +63,6 @@ def generate_sample_data() -> pd.DataFrame:
         'computational linguistics', 'semantic web', 'reinforcement learning'
     ]
     
-    # Sample institutions
-    all_institutions = [
-        'Stanford University', 'MIT', 'Harvard University', 'UC Berkeley',
-        'University of Oxford', 'University of Cambridge', 'ETH Zurich',
-        'Imperial College London', 'University of Toronto', 'Tsinghua University',
-        'National University of Singapore', 'Technical University of Munich',
-        'University of Tokyo', 'Peking University', 'Seoul National University'
-    ]
-    
     # Sample countries
     all_countries = [
         'United States', 'China', 'United Kingdom', 'Germany', 'Canada',

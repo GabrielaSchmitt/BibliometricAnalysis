@@ -11,7 +11,6 @@ from modules.visualizations import (
     plot_top_authors,
     plot_keyword_cloud,
     plot_author_network,
-    plot_top_institutions,
     plot_countries,
     plot_database_quality,
 )
@@ -226,19 +225,10 @@ if st.session_state.processed and st.session_state.data is not None:
     with tab3:
         st.subheader("Source & Geographic Analysis")
         
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            # Top institutions
-            st.markdown("### Most Relevant Publication Institutions")
-            fig_institutions = plot_top_institutions(data)
-            st.plotly_chart(fig_institutions, use_container_width=True)
-        
-        with col2:
-            # Countries with most publications
-            st.markdown("### Countries with Most Publications")
-            fig_countries = plot_countries(data)
-            st.plotly_chart(fig_countries, use_container_width=True)
+        # Countries with most publications
+        st.markdown("### Countries with Most Publications")
+        fig_countries = plot_countries(data)
+        st.plotly_chart(fig_countries, use_container_width=True)
         
         # Database quality ranking
         st.markdown("### Database Quality Ranking")
