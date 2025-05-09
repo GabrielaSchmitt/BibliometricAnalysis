@@ -69,8 +69,6 @@ bibliometric-analysis-tool/
 │   ├── data_processor.py     # Data cleaning and processing
 │   ├── visualizations.py     # Visualization generation
 │   └── utils.py              # Helper functions
-├── extra/
-│   ├── ebsco_csv_to_ris.py   # Converter 
 ├── requirements.txt          # Dependencies
 └── README.md                 # This file
 ```
